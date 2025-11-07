@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Face ID Kirish</title>
+    <style>
+      /* === Umumiy stil === */
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, #e0f7fa, #e3f2fd);
+        height: 100vh;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .container {
+        background: #fff;
+        padding: 30px 40px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        width: 420px;
+        animation: fadeIn 0.6s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h2 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      p a {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      p a:hover {
+        text-decoration: underline;
+      }
+
+      /* === Kamera va tugmalar === */
+      video {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        border: 3px solid #4caf50;
+        margin: 20px 0;
+        background-color: #000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .buttons button {
+        margin: 6px;
+        padding: 10px 22px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        transition: 0.2s;
+      }
+
+      .buttons button:hover {
+        transform: scale(1.05);
+      }
+
+      #startBtn {
+        background-color: #4caf50;
+      }
+
+      #stopBtn {
+        background-color: #f44336;
+      }
+
+      #continueBtn {
+        background-color: #2196f3;
+        display: none;
+      }
+
+      /* === Natija oynasi === */
+      #result {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 300px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        display: none;
+        z-index: 1000;
+        font-size: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+        transition: opacity 0.3s ease;
+      }
+
+      #result.success {
+        background-color: #4caf50;
+      }
+      #result.error {
+        background-color: #f44336;
+      }
+      #result.warning {
+        background-color: #ff9800;
+      }
+      #result.info {
+        background-color: #2196f3;
+      }
+
+      #status {
+        font-size: 14px;
+        color: #555;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>🔐 Face ID orqali tizimga kirish</h2>
+      <p>Adminmisiz? <a href="/admin">Admin panelga o‘tish</a></p>
+
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" style="display: none"></canvas>
+
+      <div class="buttons">
+        <button id="startBtn">📸 Kamerani ochish</button>
+        <button id="stopBtn">❌ Kamerani o‘chirish</button>
+        <button id="continueBtn">➡️ Davom etish</button>
+      </div>
+
+      <div id="status">Kamera hozircha ishlamayapti.</div>
+    </div>
+
+    <p id="result"></p>
+
+    <script>
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      const result = document.getElementById("result");
+      const continueBtn = document.getElementById("continueBtn");
+      const statusText = document.getElementById("status");
+
+      let stream = null;
+      let detectInterval = null;
+
+      function showMessage(text, type = "info") {
+        result.textContent = text;
+        result.className = type;
+        result.style.display = "block";
+        result.style.opacity = "1";
+        setTimeout(() => {
+          result.style.opacity = "0";
+          setTimeout(() => (result.style.display = "none"), 300);
+        }, 4000);
+      }
+
+      async function startCamera() {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+          showMessage("📸 Kamera ishga tushdi", "success");
+          statusText.textContent = "Kamera faol! Yuzni aniqlash boshlandi...";
+          detectInterval = setInterval(detectFace, 3000);
+        } catch (err) {
+          showMessage("Kamera ochilmadi: " + err.message, "error");
+          statusText.textContent = "❌ Kamera ishga tushmadi.";
+        }
+      }
+
+      function stopCamera() {
+        if (stream) {
+          stream.getTracks().forEach((t) => t.stop());
+          stream = null;
+        }
+        if (detectInterval) {
+          clearInterval(detectInterval);
+          detectInterval = null;
+        }
+        showMessage("❌ Kamera o‘chirildi", "warning");
+        statusText.textContent = "Kamera o‘chirildi.";
+      }
+
+      function captureImage() {
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        return canvas.toDataURL("image/jpeg");
+      }
+
+      async function detectFace() {
+        if (!stream) return;
+        statusText.textContent = "🔎 Yuz aniqlanmoqda...";
+
+        const image = captureImage();
+        try {
+          const res = await fetch("/auth", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image }),
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            stopCamera();
+            showMessage(data.message || "✅ Yuz tanildi!", "success");
+            statusText.textContent = "✅ Yuz muvaffaqiyatli tanildi!";
+            continueBtn.style.display = "inline-block";
+            continueBtn.onclick = () => (window.location.href = data.redirect);
+          } else {
+            showMessage(data.message || "Yuz topilmadi", "error");
+            statusText.textContent = "⏳ Yuz topilmadi, qayta urinilmoqda...";
+          }
+        } catch (err) {
+          showMessage("Server bilan aloqa xatosi!", "error");
+          statusText.textContent = "❌ Server bilan aloqa yo‘q.";
+        }
+      }
+
+      document.getElementById("startBtn").onclick = startCamera;
+      document.getElementById("stopBtn").onclick = stopCamera;
+      window.addEventListener("beforeunload", stopCamera);
+    </script>
+  </body>
+</html>

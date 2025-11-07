@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin panel</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        color: #333;
+        text-align: center;
+        margin: 0;
+        padding: 30px;
+      }
+
+      h1 {
+        color: #0d47a1;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Jadval dizayni */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+      }
+
+      th,
+      td {
+        border: 1px solid #bbdefb;
+        padding: 10px;
+        border-radius: 4px;
+      }
+
+      th {
+        background: #1976d2;
+        color: white;
+      }
+
+      tr:nth-child(even) {
+        background: #f1f8ff;
+      }
+
+      .role-admin {
+        color: #c62828;
+        font-weight: bold;
+      }
+
+      .role-user {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+
+      /* Video va input qismi */
+      video {
+        width: 380px;
+        height: 280px;
+        border-radius: 10px;
+        border: 3px solid #1976d2;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        margin: 20px 0;
+        background: #000;
+      }
+
+      input {
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: 2px solid #90caf9;
+        font-size: 15px;
+        outline: none;
+        width: 240px;
+      }
+
+      input:focus {
+        border-color: #1976d2;
+      }
+
+      button {
+        padding: 10px 15px;
+        border-radius: 8px;
+        border: none;
+        font-size: 15px;
+        color: #fff;
+        cursor: pointer;
+        margin: 5px;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+
+      #startBtn {
+        background: #43a047;
+      }
+      #startBtn:hover {
+        background: #2e7d32;
+      }
+
+      #stopBtn {
+        background: #e53935;
+      }
+      #stopBtn:hover {
+        background: #c62828;
+      }
+
+      #addBtn {
+        background: #1e88e5;
+      }
+      #addBtn:hover {
+        background: #1565c0;
+      }
+
+      .deleteBtn {
+        background: #ef5350;
+        padding: 5px 10px;
+      }
+
+      #message {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #1565c0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div style="text-align: right; margin-bottom: 15px">
+      <button
+        onclick="goDashboard()"
+        style="
+          background: #42a5f5;
+          color: white;
+          padding: 8px 14px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        "
+      >
+        ➡️ Foydalanuvchi sahifasiga o‘tish
+      </button>
+      <button
+        onclick="logout()"
+        style="
+          background: #ef5350;
+          color: white;
+          padding: 8px 14px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+        "
+      >
+        🚪 Chiqish
+      </button>
+    </div>
+    <div class="container">
+      <h1>🧑‍💼 Admin Panel</h1>
+
+      <h3>Foydalanuvchilar ro‘yxati</h3>
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Qo‘shilgan sana</th>
+            <th>Rasm soni</th>
+            <th>Amal</th>
+          </tr>
+        </thead>
+        <tbody id="userList">
+          <tr>
+            <td colspan="6">⏳ Ma'lumotlar yuklanmoqda...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr />
+
+      <h3>➕ Yangi foydalanuvchi qo‘shish</h3>
+      <input type="text" id="username" placeholder="Foydalanuvchi nomi" />
+      <div>
+        <video id="video" autoplay></video>
+        <canvas id="canvas" style="display: none"></canvas>
+      </div>
+
+      <div>
+        <button id="startBtn">Kamera ochish</button>
+        <button id="stopBtn">Kamerani o‘chirish</button>
+        <button id="addBtn" onclick="addUser()">Qo‘shish</button>
+      </div>
+
+      <p id="message"></p>
+    </div>
+
+    <script>
+      const video = document.getElementById("video");
+      const canvas = document.getElementById("canvas");
+      let stream = null;
+
+      // 📸 Kamera boshqaruvi
+      document
+        .getElementById("startBtn")
+        .addEventListener("click", async () => {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          video.srcObject = stream;
+        });
+
+      document.getElementById("stopBtn").addEventListener("click", () => {
+        if (stream) {
+          stream.getTracks().forEach((t) => t.stop());
+          video.srcObject = null;
+          stream = null;
+        }
+      });
+
+      // 📷 Kamera orqali surat olish
+      function capture() {
+        const ctx = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+        return canvas.toDataURL("image/jpeg");
+      }
+
+      // 🧾 Foydalanuvchi qo‘shish
+      async function addUser() {
+        const username = document.getElementById("username").value.trim();
+        if (!username) return alert("Iltimos foydalanuvchi nomini kiriting!");
+
+        const image = capture();
+
+        const res = await fetch("/admin/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, image }),
+        });
+
+        const data = await res.json();
+        document.getElementById("message").innerText = data.message;
+
+        if (data.success) {
+          await loadUsers(); // 🔁 jadvalni yangilash
+          document.getElementById("username").value = "";
+        }
+      }
+
+      // 🧹 Foydalanuvchini o‘chirish
+      async function deleteUser(username) {
+        if (!confirm(`${username} foydalanuvchisini o‘chirmoqchimisiz?`))
+          return;
+
+        const res = await fetch(`/admin/delete/${username}`, {
+          method: "DELETE",
+        });
+
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) loadUsers();
+      }
+
+      // 📋 Foydalanuvchilar ro‘yxatini yuklash
+      async function loadUsers() {
+        const res = await fetch("/admin/users");
+        const users = await res.json();
+
+        const tbody = document.getElementById("userList");
+        tbody.innerHTML = "";
+
+        if (users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6">🚫 Hali foydalanuvchi yo‘q</td></tr>`;
+          return;
+        }
+
+        users.forEach((u, i) => {
+          tbody.innerHTML += `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${u.username}</td>
+          <td class="role-${u.role}">${u.role}</td>
+          <td>${u.created}</td>
+          <td>${u.images}</td>
+          <td>
+            <button class="deleteBtn" onclick="deleteUser('${
+              u.username
+            }')">O‘chirish</button>
+          </td>
+        </tr>`;
+        });
+      }
+
+      // 🔹 Foydalanuvchi sahifasiga o‘tish
+      function goDashboard() {
+        window.location.href = "/";
+      }
+
+      // 🔹 Logout qilish
+      async function logout() {
+        if (confirm("Haqiqatan ham tizimdan chiqmoqchimisiz?")) {
+          window.location.href = "/logout";
+        }
+      }
+
+      // 📦 Dastlab sahifa ochilganda foydalanuvchilarni yuklash
+      loadUsers();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎉 Xush kelibsiz</title>
+    <style>
+      /* Umumiy dizayn */
+      body {
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+        background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+
+      .card {
+        background: #fff;
+        padding: 40px 50px;
+        border-radius: 16px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        width: 400px;
+        animation: fadeIn 1s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      h1 {
+        color: #4caf50;
+        font-size: 26px;
+        margin-bottom: 10px;
+      }
+
+      p {
+        color: #555;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+
+      .emoji {
+        font-size: 48px;
+        margin-bottom: 15px;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        background: #2196f3;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: 0.3s;
+        text-decoration: none;
+      }
+
+      .btn:hover {
+        background: #1976d2;
+      }
+
+      footer {
+        margin-top: 25px;
+        font-size: 13px;
+        color: #777;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <div class="emoji">🎉</div>
+      <h1>Face ID orqali tizimga kirdingiz!</h1>
+      <p>
+        👋 Xush kelibsiz, foydalanuvchi!<br />Bu loyiha BMI uchun yaratilgan
+        Face Recognition tizimidir.
+      </p>
+
+      <a href="/" class="btn">↩️ Chiqish</a>
+
+      <footer>© 2025 BMI Face Recognition loyihasi</footer>
+    </div>
+  </body>
+</html>
